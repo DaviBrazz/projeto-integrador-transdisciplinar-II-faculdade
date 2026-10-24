@@ -1,3 +1,5 @@
 spring:
-  application:
-    name: demo
+  profiles:
+    active: test
+  jpa:
+    open-in-view: true
