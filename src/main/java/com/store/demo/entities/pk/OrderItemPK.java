@@ -1,7 +1,8 @@
 package com.store.demo.entities.pk;
 
-import api.pedidos.clientes.entities.Order;
-import api.pedidos.clientes.entities.Product;
+
+import com.store.demo.entities.Order;
+import com.store.demo.entities.Product;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;

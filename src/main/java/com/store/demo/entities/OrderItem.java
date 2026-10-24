@@ -1,8 +1,8 @@
 package com.store.demo.entities;
 
 
-import api.pedidos.clientes.entities.pk.OrderItemPK;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.store.demo.entities.pk.OrderItemPK;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;

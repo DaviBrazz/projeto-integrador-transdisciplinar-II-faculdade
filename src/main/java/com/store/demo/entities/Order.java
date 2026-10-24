@@ -1,7 +1,7 @@
 package com.store.demo.entities;
 
-import api.pedidos.clientes.entities.enums.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.store.demo.entities.enums.OrderStatus;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
