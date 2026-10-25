@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Pedidos - Dashboard Profissional</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Animações para Toasts e Modais */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+
+        .toast-enter {
+            animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @media (max-width: 640px) {
+            .toast-enter {
+                animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+        }
+
+        .toast-exit {
+            animation: fadeOut 0.25s ease forwards;
+        }
+
+        /* Scrollbar suave */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col md:flex-row bg-slate-50 text-slate-800 font-sans">
+
+<!-- CONTAINER DE TOASTS -->
+<div id="toast-container" class="fixed top-4 right-4 left-4 sm:left-auto sm:top-5 sm:right-5 z-[9999] flex flex-col gap-2.5 pointer-events-none max-w-md w-full"></div>
+
+<!-- OVERLAY DRAWER MOBILE -->
+<div id="drawerOverlay" onclick="toggleDrawer()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden md:hidden transition-opacity duration-300 opacity-0"></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="fixed md:static inset-y-0 left-0 w-72 bg-slate-900 text-slate-300 z-50 flex flex-col justify-between transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none shrink-0">
+    <div>
+        <!-- Header Sidebar -->
+        <div class="h-16 px-6 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/40">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 11h14l1 12H4L5 11z"/></svg>
+                </div>
+                <span class="font-bold text-lg text-white tracking-tight">E-Commerce Pro</span>
+            </div>
+            <button onclick="toggleDrawer()" class="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Navegação Lateral -->
+        <nav class="p-4 space-y-1.5">
+            <div class="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Visão Geral</div>
+
+            <a href="#" onclick="switchTab('dashboard', this); return false;" class="nav-item active group flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-medium text-sm text-white bg-blue-600 shadow-lg shadow-blue-600/25 transition-all duration-200">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="px-3 py-2 mt-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Gestão do Domínio</div>
+
+            <a href="#" onclick="switchTab('products', this); return false;" class="nav-item group flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all duration-200">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <span>Produtos</span>
+            </a>
+
+            <a href="#" onclick="switchTab('categories', this); return false;" class="nav-item group flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all duration-200">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 11h.01M7 15h.01M11 7h8M11 11h8M11 15h8"/></svg>
+                <span>Categorias</span>
+            </a>
+
+            <a href="#" onclick="switchTab('orders', this); return false;" class="nav-item group flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all duration-200">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                <span>Pedidos</span>
+            </a>
+
+            <a href="#" onclick="switchTab('users', this); return false;" class="nav-item group flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all duration-200">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <span>Clientes</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Rodapé Sidebar -->
+    <div class="p-4 border-t border-slate-800/80 bg-slate-950/20">
+        <div class="flex items-center gap-3 px-2 py-1.5">
+            <div class="w-9 h-9 rounded-full bg-blue-600/30 border border-blue-500/30 flex items-center justify-center text-xs font-bold text-blue-400">AD</div>
+            <div class="flex flex-col min-w-0">
+                <span class="text-xs font-semibold text-white truncate">Administrador Spring</span>
+                <span class="text-[10px] text-slate-400 truncate">admin@spring.io</span>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- ÁREA PRINCIPAL -->
+<div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative">
+
+    <!-- HEADER TOP -->
+    <header class="h-16 px-4 md:px-8 bg-white border-b border-slate-200/80 flex items-center justify-between shrink-0 shadow-sm z-10">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleDrawer()" class="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <h1 id="page-title" class="text-lg md:text-xl font-bold text-slate-900 tracking-tight">Visão Geral</h1>
+        </div>
+
+        <!-- Botões dinâmicos no Header -->
+        <div id="header-actions" class="flex items-center gap-2">
+            <!-- Injetado Dinamicamente -->
+        </div>
+    </header>
+
+    <!-- CONTEÚDO SCROLLÁVEL -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 bg-slate-50/50">
+
+        <!-- SEÇÃO DASHBOARD OVERVIEW -->
+        <section id="dashboard-section" class="section active max-w-7xl mx-auto space-y-6">
+            <!-- Cards de Métricas Primárias -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Faturamento Total</p>
+                        <h3 id="dash-total-revenue" class="text-xl font-bold text-slate-900 mt-0.5">R$ 0,00</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Aguardando Pagamento</p>
+                        <h3 id="dash-pending-orders" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Produtos Cadastrados</p>
+                        <h3 id="dash-total-products" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Clientes Ativos</p>
+                        <h3 id="dash-total-clients" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela Recente e Atividades -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- ÚLTIMOS PEDIDOS -->
+                <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-slate-900 text-base">Últimos Pedidos</h3>
+                        <button onclick="switchTab('orders')" class="text-xs font-semibold text-blue-600 hover:text-blue-700">Ver Todos →</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                            <tr class="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100">
+                                <th class="pb-3 px-2">ID</th>
+                                <th class="pb-3 px-2">Cliente</th>
+                                <th class="pb-3 px-2">Status</th>
+                                <th class="pb-3 px-2 text-right">Valor Total</th>
+                            </tr>
+                            </thead>
+                            <tbody id="dash-recent-orders" class="divide-y divide-slate-100">
+                            <!-- Dinâmico -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- RESUMO DE CATEGORIAS -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-4">
+                    <h3 class="font-bold text-slate-900 text-base">Distribuição por Categoria</h3>
+                    <div id="dash-categories-summary" class="space-y-3">
+                        <!-- Dinâmico -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO DE PRODUTOS -->
+        <section id="products-section" class="section hidden max-w-7xl mx-auto space-y-6">
+            <div id="product-list-container">
+                <!-- Tabela Desktop -->
+                <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                        <tr class="bg-slate-50/80 border-b border-slate-200/80 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            <th class="py-4 px-6">ID</th>
+                            <th class="py-4 px-6">Produto</th>
+                            <th class="py-4 px-6">Preço</th>
+                            <th class="py-4 px-6">Descrição</th>
+                            <th class="py-4 px-6">Categorias</th>
+                            <th class="py-4 px-6 text-right">Ações</th>
+                        </tr>
+                        </thead>
+                        <tbody id="productTableBody" class="divide-y divide-slate-100 text-sm font-normal text-slate-700">
+                        <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Cards Mobile -->
+                <div id="productCardsBody" class="grid grid-cols-1 gap-3.5 md:hidden">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO DE CATEGORIAS -->
+        <section id="categories-section" class="section hidden max-w-7xl mx-auto space-y-6">
+            <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <th class="py-4 px-6">ID</th>
+                        <th class="py-4 px-6">Nome da Categoria</th>
+                        <th class="py-4 px-6">Total de Produtos Associados</th>
+                        <th class="py-4 px-6 text-right">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="categoryTableBody" class="divide-y divide-slate-100 text-sm font-normal text-slate-700">
+                    <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="categoryCardsBody" class="grid grid-cols-1 gap-3.5 md:hidden">
+                <!-- Mobile -->
+            </div>
+        </section>
+
+        <!-- SEÇÃO DE PEDIDOS -->
+        <section id="orders-section" class="section hidden max-w-7xl mx-auto space-y-6">
+            <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <th class="py-4 px-6">ID Pedido</th>
+                        <th class="py-4 px-6">Data / Horário (Instant)</th>
+                        <th class="py-4 px-6">Cliente</th>
+                        <th class="py-4 px-6">Status</th>
+                        <th class="py-4 px-6">Total do Pedido</th>
+                        <th class="py-4 px-6 text-right">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="orderTableBody" class="divide-y divide-slate-100 text-sm font-normal text-slate-700">
+                    <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="orderCardsBody" class="grid grid-cols-1 gap-3.5 md:hidden">
+                <!-- Mobile -->
+            </div>
+        </section>
+
+        <!-- SEÇÃO DE CLIENTES / USERS -->
+        <section id="users-section" class="section hidden max-w-7xl mx-auto space-y-6">
+            <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <th class="py-4 px-6">ID</th>
+                        <th class="py-4 px-6">Nome</th>
+                        <th class="py-4 px-6">Email</th>
+                        <th class="py-4 px-6">Telefone</th>
+                        <th class="py-4 px-6">Qtd. Pedidos</th>
+                    </tr>
+                    </thead>
+                    <tbody id="userTableBody" class="divide-y divide-slate-100 text-sm font-normal text-slate-700">
+                    <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="userCardsBody" class="grid grid-cols-1 gap-3.5 md:hidden">
+                <!-- Mobile -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION MOBILE -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200/80 flex items-center justify-around z-30 px-2 shadow-lg">
+        <button onclick="switchTab('dashboard', this)" class="bottom-nav-item active flex flex-col items-center justify-center w-full h-full text-blue-600 gap-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <span class="text-[10px] font-medium">Dash</span>
+        </button>
+        <button onclick="switchTab('products', this)" class="bottom-nav-item flex flex-col items-center justify-center w-full h-full text-slate-400 gap-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            <span class="text-[10px] font-medium">Produtos</span>
+        </button>
+        <button onclick="switchTab('categories', this)" class="bottom-nav-item flex flex-col items-center justify-center w-full h-full text-slate-400 gap-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 11h.01M7 15h.01M11 7h8M11 11h8M11 15h8"/></svg>
+            <span class="text-[10px] font-medium">Categorias</span>
+        </button>
+        <button onclick="switchTab('orders', this)" class="bottom-nav-item flex flex-col items-center justify-center w-full h-full text-slate-400 gap-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+            <span class="text-[10px] font-medium">Pedidos</span>
+        </button>
+        <button onclick="switchTab('users', this)" class="bottom-nav-item flex flex-col items-center justify-center w-full h-full text-slate-400 gap-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <span class="text-[10px] font-medium">Clientes</span>
+        </button>
+    </nav>
+
+</div>
+
+<!-- MODAL FORMULÁRIO DE PRODUTO -->
+<div id="product-form-container" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6 flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-xl overflow-hidden transform transition-all my-auto">
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h3 id="product-form-title" class="text-base font-bold text-slate-900">Cadastrar Novo Produto</h3>
+            <button type="button" onclick="cancelProductForm()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="productForm" onsubmit="saveProduct(event)" class="p-6 space-y-4">
+            <input type="hidden" id="productId">
+
+            <div class="space-y-1.5">
+                <label for="productName" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Nome do Produto</label>
+                <input type="text" id="productName" required placeholder="Ex: Smart TV 55 4K UHD" class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label for="productPrice" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Preço (R$)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm font-medium">R$</span>
+                        <input type="number" id="productPrice" step="0.01" required placeholder="0.00" class="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    <label for="productImg" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">URL da Imagem</label>
+                    <input type="text" id="productImg" placeholder="https://..." class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Categorias (Múltipla Seleção)</label>
+                <div id="product-category-checkboxes" class="grid grid-cols-2 gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl max-h-36 overflow-y-auto">
+                    <!-- Injetado dinamicamente -->
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label for="productDescription" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Descrição</label>
+                <textarea id="productDescription" rows="3" placeholder="Insira a descrição detalhada..." class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition resize-none"></textarea>
+            </div>
+
+            <div class="pt-4 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
+                <button type="button" onclick="cancelProductForm()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition">
+                    Cancelar
+                </button>
+                <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-md shadow-blue-500/20 transition">
+                    Salvar Produto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL FORMULÁRIO DE CATEGORIA -->
+<div id="category-form-container" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6 flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden my-auto">
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h3 id="category-form-title" class="text-base font-bold text-slate-900">Cadastrar Categoria</h3>
+            <button type="button" onclick="cancelCategoryForm()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="categoryForm" onsubmit="saveCategory(event)" class="p-6 space-y-4">
+            <input type="hidden" id="categoryId">
+            <div class="space-y-1.5">
+                <label for="categoryName" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Nome da Categoria</label>
+                <input type="text" id="categoryName" required placeholder="Ex: Eletrodomésticos" class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+            </div>
+            <div class="pt-4 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
+                <button type="button" onclick="cancelCategoryForm()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition">
+                    Cancelar
+                </button>
+                <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-md shadow-blue-500/20 transition">
+                    Salvar Categoria
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL DETALHES DO PEDIDO -->
+<div id="order-detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6 flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-2xl overflow-hidden my-auto">
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div>
+                <h3 id="modal-order-id" class="text-base font-bold text-slate-900">Detalhes do Pedido #--</h3>
+                <p id="modal-order-moment" class="text-xs text-slate-400">Data: --</p>
+            </div>
+            <button type="button" onclick="closeOrderModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+            <!-- Informações Cliente e Pagamento -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/60">
+                <div>
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Cliente</span>
+                    <h4 id="modal-order-client" class="font-bold text-slate-800 text-sm">--</h4>
+                    <p id="modal-order-email" class="text-xs text-slate-500">--</p>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Pagamento (@MapsId)</span>
+                    <div id="modal-order-payment" class="text-xs text-slate-700 space-y-0.5">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alterar Status do Pedido -->
+            <div class="flex items-center justify-between p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                <div>
+                    <span class="text-xs font-bold text-blue-900">Status do Pedido:</span>
+                    <p class="text-xs text-blue-700">Atualize o ciclo de vida deste pedido no banco de dados.</p>
+                </div>
+                <select id="modal-order-status-select" onchange="updateOrderStatusFromModal()" class="px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-200 bg-white text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="WAITING_PAYMENT">WAITING_PAYMENT</option>
+                    <option value="PAID">PAID</option>
+                    <option value="SHIPPED">SHIPPED</option>
+                    <option value="DELIVERED">DELIVERED</option>
+                    <option value="CANCELED">CANCELED</option>
+                </select>
+            </div>
+
+            <!-- Tabela de Itens (OrderItem) -->
+            <div>
+                <h4 class="font-bold text-slate-900 text-sm mb-3">Itens do Pedido (OrderItemPK)</h4>
+                <div class="border border-slate-200 rounded-xl overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500">
+                        <tr>
+                            <th class="py-2.5 px-4">Produto</th>
+                            <th class="py-2.5 px-4 text-center">Preço Unit.</th>
+                            <th class="py-2.5 px-4 text-center">Qtd</th>
+                            <th class="py-2.5 px-4 text-right">Subtotal</th>
+                        </tr>
+                        </thead>
+                        <tbody id="modal-order-items-table" class="divide-y divide-slate-100 text-xs">
+                        <!-- Dinâmico -->
+                        </tbody>
+                        <tfoot class="bg-slate-50/80 font-bold border-t border-slate-200">
+                        <tr>
+                            <td colspan="3" class="py-3 px-4 text-right text-slate-600">Total do Pedido:</td>
+                            <td id="modal-order-total" class="py-3 px-4 text-right text-emerald-600 text-sm">R$ 0,00</td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT DA APLICAÇÃO E SIMULAÇÃO DE BANCO DE DADOS (DOMÍNIO SPRING BOOT) -->
+<script>
+    // --- DADOS EM MEMÓRIA (MOCK COMPATÍVEL COM SPRING BOOT DOMAIN) ---
+    let categories = [
+        { id: 1, name: "Eletrônicos" },
+        { id: 2, name: "Livros" },
+        { id: 3, name: "Informática" },
+        { id: 4, name: "Casa & Decoração" }
+    ];
+
+    let products = [
+        { id: 1, name: "The Lord of the Rings", price: 90.5, descriptionString: "Livro de fantasia épica de J.R.R. Tolkien.", imgUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=150", categories: [2] },
+        { id: 2, name: "Smart TV 55\" 4K", price: 2190.0, descriptionString: "Smart TV LED 55 polegadas Ultra HD 4K.", imgUrl: "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=150", categories: [1] },
+        { id: 3, name: "MacBook Pro 14\"", price: 12500.0, descriptionString: "Processador M2 Pro, 16GB RAM, 512GB SSD.", imgUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=150", categories: [1, 3] },
+        { id: 4, name: "PC Gamer Core i7", price: 4200.0, descriptionString: "Intel Core i7, 16GB DDR4, RTX 3060 12GB.", imgUrl: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=150", categories: [3] },
+        { id: 5, name: "Spring Boot & Java Guide", price: 79.9, descriptionString: "Aprenda desenvolvimento Backend moderno.", imgUrl: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=150", categories: [2] }
+    ];
+
+    let users = [
+        { id: 1, name: "Maria Brown", email: "maria@gmail.com", phone: "988888888" },
+        { id: 2, name: "Alex Green", email: "alex@gmail.com", phone: "977777777" },
+        { id: 3, name: "Bob Blue", email: "bob@gmail.com", phone: "966666666" }
+    ];
+
+    let orders = [
+        {
+            id: 1,
+            moment: "2026-06-20T19:53:07Z",
+            orderStatus: "PAID",
+            client: users[0],
+            payment: { id: 1, moment: "2026-06-20T21:53:07Z", method: "Cartão de Crédito" }, // @MapsId: ID igual ao do Pedido!
+            items: [
+                { productId: 1, price: 90.5, quantity: 2 },
+                { productId: 3, price: 12500.0, quantity: 1 }
+            ]
+        },
+        {
+            id: 2,
+            moment: "2026-07-21T03:42:10Z",
+            orderStatus: "WAITING_PAYMENT",
+            client: users[1],
+            payment: null,
+            items: [
+                { productId: 2, price: 2190.0, quantity: 1 }
+            ]
+        },
+        {
+            id: 3,
+            moment: "2026-07-22T15:21:22Z",
+            orderStatus: "DELIVERED",
+            client: users[0],
+            payment: { id: 3, moment: "2026-07-22T15:25:00Z", method: "PIX" },
+            items: [
+                { productId: 5, price: 79.9, quantity: 1 }
+            ]
+        }
+    ];
+
+    let currentActiveOrderModal = null;
+
+    // --- MÉTODOS AUXILIARES ---
+    function calculateOrderTotal(order) {
+        return order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    }
+
+    function getStatusBadge(status) {
+        const badges = {
+            WAITING_PAYMENT: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">Aguardando Pagamento</span>',
+            PAID: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">Pago</span>',
+            SHIPPED: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60">Enviado</span>',
+            DELIVERED: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">Entregue</span>',
+            CANCELED: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/60">Cancelado</span>'
+        };
+        return badges[status] || status;
+    }
+
+    function formatDate(isoString) {
+        if(!isoString) return '-';
+        const date = new Date(isoString);
+        return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // --- SISTEMA DE TOASTS ---
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const isSuccess = type === 'success';
+
+        toast.className = `toast-enter pointer-events-auto flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl border shadow-xl ${
+            isSuccess ? 'bg-slate-900 border-emerald-500/40 text-white' : 'bg-slate-900 border-rose-500/40 text-white'
+        }`;
+        toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="p-1 rounded-lg ${isSuccess ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            ${isSuccess
+            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
+                        </svg>
+                    </div>
+                    <span class="text-sm font-medium leading-tight">${message}</span>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            `;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 250);
+        }, 3500);
+    }
+
+    function toggleDrawer() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('drawerOverlay');
+        const isOpen = !sidebar.classList.contains('-translate-x-full');
+
+        if (isOpen) {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        } else {
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            sidebar.classList.remove('-translate-x-full');
+        }
+    }
+
+    // --- TROCA DE ABAS ---
+    function switchTab(tabName, element) {
+        document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
+        const activeSection = document.getElementById(tabName + '-section');
+        if(activeSection) activeSection.classList.remove('hidden');
+
+        const pageTitle = document.getElementById('page-title');
+        const headerActions = document.getElementById('header-actions');
+
+        if (tabName === 'dashboard') {
+            pageTitle.innerText = 'Visão Geral & Métricas';
+            headerActions.innerHTML = '';
+            loadDashboard();
+        } else if (tabName === 'products') {
+            pageTitle.innerText = 'Gerenciamento de Produtos';
+            headerActions.innerHTML = `
+                    <button onclick="showProductForm()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-md shadow-blue-500/20 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                        <span>Novo Produto</span>
+                    </button>`;
+            loadProducts();
+        } else if (tabName === 'categories') {
+            pageTitle.innerText = 'Gerenciamento de Categorias';
+            headerActions.innerHTML = `
+                    <button onclick="showCategoryForm()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-md shadow-blue-500/20 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                        <span>Nova Categoria</span>
+                    </button>`;
+            loadCategories();
+        } else if (tabName === 'orders') {
+            pageTitle.innerText = 'Gerenciamento de Pedidos';
+            headerActions.innerHTML = '';
+            loadOrders();
+        } else if (tabName === 'users') {
+            pageTitle.innerText = 'Clientes Cadastrados';
+            headerActions.innerHTML = '';
+            loadUsers();
+        }
+
+        // Ativa os menus visuais
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-600/25');
+            item.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800/60');
+        });
+        document.querySelectorAll('.bottom-nav-item').forEach(item => {
+            item.classList.remove('text-blue-600');
+            item.classList.add('text-slate-400');
+        });
+
+        if (element) {
+            if (element.classList.contains('nav-item')) {
+                element.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-600/25');
+                element.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800/60');
+            } else if (element.classList.contains('bottom-nav-item')) {
+                element.classList.add('text-blue-600');
+                element.classList.remove('text-slate-400');
+            }
+        }
+
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar.classList.contains('-translate-x-full')) toggleDrawer();
+    }
+
+    // --- LOGICA DASHBOARD ---
+    function loadDashboard() {
+        const totalRevenue = orders
+            .filter(o => o.orderStatus !== 'CANCELED')
+            .reduce((sum, o) => sum + calculateOrderTotal(o), 0);
+
+        const pendingCount = orders.filter(o => o.orderStatus === 'WAITING_PAYMENT').length;
+
+        document.getElementById('dash-total-revenue').innerText = `R$ ${totalRevenue.toFixed(2)}`;
+        document.getElementById('dash-pending-orders').innerText = pendingCount;
+        document.getElementById('dash-total-products').innerText = products.length;
+        document.getElementById('dash-total-clients').innerText = users.length;
+
+        // Renderizar Últimos Pedidos
+        const recentOrdersTable = document.getElementById('dash-recent-orders');
+        recentOrdersTable.innerHTML = orders.slice(-5).reverse().map(o => `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3 px-2 font-mono text-xs font-bold text-slate-500">#${o.id}</td>
+                    <td class="py-3 px-2 font-medium text-slate-800">${o.client ? o.client.name : 'N/A'}</td>
+                    <td class="py-3 px-2">${getStatusBadge(o.orderStatus)}</td>
+                    <td class="py-3 px-2 text-right font-semibold text-slate-900">R$ ${calculateOrderTotal(o).toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+        // Renderizar Distribuição de Categorias
+        const categoriesSummary = document.getElementById('dash-categories-summary');
+        categoriesSummary.innerHTML = categories.map(cat => {
+            const count = products.filter(p => p.categories.includes(cat.id)).length;
+            const percentage = products.length > 0 ? Math.round((count / products.length) * 100) : 0;
+            return `
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-slate-700">${cat.name}</span>
+                            <span class="text-slate-400">${count} produtos (${percentage}%)</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-blue-600 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+        }).join('');
+    }
+
+    // --- LÓGICA DE PRODUTOS ---
+    function loadProducts() {
+        const tbody = document.getElementById('productTableBody');
+        const cardsBody = document.getElementById('productCardsBody');
+
+        tbody.innerHTML = products.map(p => {
+            const productCats = p.categories.map(cId => {
+                const cat = categories.find(c => c.id === cId);
+                return cat ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200/60">${cat.name}</span>` : '';
+            }).join(' ');
+
+            return `
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-4 px-6 font-mono text-xs text-slate-500">#${p.id}</td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <img src="${p.imgUrl}" onerror="this.src='https://placehold.co/100x100?text=Produto'" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
+                                <span class="font-semibold text-slate-900">${p.name}</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 font-semibold text-emerald-600">R$ ${p.price.toFixed(2)}</td>
+                        <td class="py-4 px-6 text-slate-500 max-w-xs truncate">${p.descriptionString || '-'}</td>
+                        <td class="py-4 px-6">${productCats || '<span class="text-xs text-slate-400">Sem categoria</span>'}</td>
+                        <td class="py-4 px-6 text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick="editProduct(${p.id})" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 transition">Editar</button>
+                                <button onclick="deleteProduct(${p.id})" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/60 transition">Excluir</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+        }).join('');
+
+        cardsBody.innerHTML = products.map(p => `
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                    <div class="flex items-center gap-3">
+                        <img src="${p.imgUrl}" onerror="this.src='https://placehold.co/100x100?text=Produto'" class="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0">
+                        <div class="min-w-0 flex-1">
+                            <span class="font-mono text-[10px] text-slate-400">#${p.id}</span>
+                            <h4 class="font-bold text-slate-900 text-sm truncate">${p.name}</h4>
+                            <span class="text-xs font-bold text-emerald-600">R$ ${p.price.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="pt-2 border-t border-slate-100 flex gap-2">
+                        <button onclick="editProduct(${p.id})" class="flex-1 py-1.5 rounded-xl text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200/60 text-center">Editar</button>
+                        <button onclick="deleteProduct(${p.id})" class="flex-1 py-1.5 rounded-xl text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200/60 text-center">Excluir</button>
+                    </div>
+                </div>
+            `).join('');
+    }
+
+    function showProductForm(pId = null) {
+        const container = document.getElementById('product-form-container');
+        const checkboxes = document.getElementById('product-category-checkboxes');
+
+        checkboxes.innerHTML = categories.map(c => `
+                <label class="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer select-none">
+                    <input type="checkbox" name="productCats" value="${c.id}" class="rounded text-blue-600 focus:ring-blue-500">
+                    <span>${c.name}</span>
+                </label>
+            `).join('');
+
+        if (pId) {
+            const p = products.find(prod => prod.id === pId);
+            document.getElementById('product-form-title').innerText = 'Editar Produto';
+            document.getElementById('productId').value = p.id;
+            document.getElementById('productName').value = p.name;
+            document.getElementById('productPrice').value = p.price;
+            document.getElementById('productImg').value = p.imgUrl || '';
+            document.getElementById('productDescription').value = p.descriptionString || '';
+
+            document.querySelectorAll('input[name="productCats"]').forEach(cb => {
+                if (p.categories.includes(parseInt(cb.value))) cb.checked = true;
+            });
+        } else {
+            document.getElementById('product-form-title').innerText = 'Cadastrar Novo Produto';
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+        }
+
+        container.classList.remove('hidden');
+    }
+
+    function cancelProductForm() {
+        document.getElementById('product-form-container').classList.add('hidden');
+    }
+
+    function saveProduct(e) {
+        e.preventDefault();
+        const id = document.getElementById('productId').value;
+        const selectedCats = Array.from(document.querySelectorAll('input[name="productCats"]:checked')).map(cb => parseInt(cb.value));
+
+        const prodData = {
+            id: id ? parseInt(id) : (products.length ? Math.max(...products.map(p => p.id)) + 1 : 1),
+            name: document.getElementById('productName').value,
+            price: parseFloat(document.getElementById('productPrice').value),
+            imgUrl: document.getElementById('productImg').value || 'https://placehold.co/150x150?text=Produto',
+            descriptionString: document.getElementById('productDescription').value,
+            categories: selectedCats
+        };
+
+        if (id) {
+            const index = products.findIndex(p => p.id === parseInt(id));
+            products[index] = prodData;
+            showToast('Produto atualizado com sucesso!');
+        } else {
+            products.push(prodData);
+            showToast('Produto cadastrado com sucesso!');
+        }
+
+        cancelProductForm();
+        loadProducts();
+    }
+
+    function editProduct(id) {
+        showProductForm(id);
+    }
+
+    function deleteProduct(id) {
+        if (!confirm('Deseja realmente excluir este produto?')) return;
+        products = products.filter(p => p.id !== id);
+        showToast('Produto removido com sucesso!');
+        loadProducts();
+    }
+
+    // --- LÓGICA DE CATEGORIAS ---
+    function loadCategories() {
+        const tbody = document.getElementById('categoryTableBody');
+        const cardsBody = document.getElementById('categoryCardsBody');
+
+        tbody.innerHTML = categories.map(c => {
+            const count = products.filter(p => p.categories.includes(c.id)).length;
+            return `
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-4 px-6 font-mono text-xs text-slate-500">#${c.id}</td>
+                        <td class="py-4 px-6 font-semibold text-slate-900">${c.name}</td>
+                        <td class="py-4 px-6 font-medium text-slate-600">${count} produtos associados</td>
+                        <td class="py-4 px-6 text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick="editCategory(${c.id})" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 transition">Editar</button>
+                                <button onclick="deleteCategory(${c.id})" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/60 transition">Excluir</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+        }).join('');
+
+        cardsBody.innerHTML = categories.map(c => {
+            const count = products.filter(p => p.categories.includes(c.id)).length;
+            return `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                        <div>
+                            <span class="font-mono text-[10px] text-slate-400">#${c.id}</span>
+                            <h4 class="font-bold text-slate-900 text-sm">${c.name}</h4>
+                            <p class="text-xs text-slate-500">${count} produtos</p>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <button onclick="editCategory(${c.id})" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200/60">Editar</button>
+                            <button onclick="deleteCategory(${c.id})" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200/60">Excluir</button>
+                        </div>
+                    </div>
+                `;
+        }).join('');
+    }
+
+    function showCategoryForm(cId = null) {
+        const container = document.getElementById('category-form-container');
+        if (cId) {
+            const c = categories.find(cat => cat.id === cId);
+            document.getElementById('category-form-title').innerText = 'Editar Categoria';
+            document.getElementById('categoryId').value = c.id;
+            document.getElementById('categoryName').value = c.name;
+        } else {
+            document.getElementById('category-form-title').innerText = 'Cadastrar Categoria';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+        }
+        container.classList.remove('hidden');
+    }
+
+    function cancelCategoryForm() {
+        document.getElementById('category-form-container').classList.add('hidden');
+    }
+
+    function saveCategory(e) {
+        e.preventDefault();
+        const id = document.getElementById('categoryId').value;
+        const name = document.getElementById('categoryName').value;
+
+        if (id) {
+            const index = categories.findIndex(c => c.id === parseInt(id));
+            categories[index].name = name;
+            showToast('Categoria atualizada com sucesso!');
+        } else {
+            const newCat = {
+                id: categories.length ? Math.max(...categories.map(c => c.id)) + 1 : 1,
+                name: name
+            };
+            categories.push(newCat);
+            showToast('Categoria criada com sucesso!');
+        }
+
+        cancelCategoryForm();
+        loadCategories();
+    }
+
+    function editCategory(id) {
+        showCategoryForm(id);
+    }
+
+    function deleteCategory(id) {
+        if (!confirm('Deseja realmente remover esta categoria?')) return;
+        categories = categories.filter(c => c.id !== id);
+        // Remove a categoria dos produtos associados
+        products.forEach(p => {
+            p.categories = p.categories.filter(cId => cId !== id);
+        });
+        showToast('Categoria excluída com sucesso!');
+        loadCategories();
+    }
+
+    // --- LÓGICA DE PEDIDOS E DETALHES ---
+    function loadOrders() {
+        const tbody = document.getElementById('orderTableBody');
+        const cardsBody = document.getElementById('orderCardsBody');
+
+        tbody.innerHTML = orders.map(o => `
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                    <td class="py-4 px-6 font-mono text-xs font-bold text-slate-500">#${o.id}</td>
+                    <td class="py-4 px-6 text-slate-600 text-xs">${formatDate(o.moment)}</td>
+                    <td class="py-4 px-6 font-semibold text-slate-900">${o.client ? o.client.name : 'N/A'}</td>
+                    <td class="py-4 px-6">${getStatusBadge(o.orderStatus)}</td>
+                    <td class="py-4 px-6 font-bold text-emerald-600">R$ ${calculateOrderTotal(o).toFixed(2)}</td>
+                    <td class="py-4 px-6 text-right">
+                        <button onclick="openOrderModal(${o.id})" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/60 transition">
+                            Ver Detalhes
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+        cardsBody.innerHTML = orders.map(o => `
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs font-bold text-slate-400">Pedido #${o.id}</span>
+                        ${getStatusBadge(o.orderStatus)}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm">${o.client ? o.client.name : 'N/A'}</h4>
+                        <p class="text-xs text-slate-400">${formatDate(o.moment)}</p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <span class="font-bold text-emerald-600 text-sm">R$ ${calculateOrderTotal(o).toFixed(2)}</span>
+                        <button onclick="openOrderModal(${o.id})" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200/60">
+                            Ver Detalhes
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+    }
+
+    function openOrderModal(orderId) {
+        const order = orders.find(o => o.id === orderId);
+        if(!order) return;
+
+        currentActiveOrderModal = order;
+
+        document.getElementById('modal-order-id').innerText = `Detalhes do Pedido #${order.id}`;
+        document.getElementById('modal-order-moment').innerText = `Data (Instant): ${formatDate(order.moment)}`;
+        document.getElementById('modal-order-client').innerText = order.client ? order.client.name : 'N/A';
+        document.getElementById('modal-order-email').innerText = order.client ? order.client.email : '-';
+        document.getElementById('modal-order-status-select').value = order.orderStatus;
+
+        // Renderiza Dados de Pagamento (Explicando o @MapsId)
+        const paymentBox = document.getElementById('modal-order-payment');
+        if (order.payment) {
+            paymentBox.innerHTML = `
+                    <p><strong>Status:</strong> Confirmado (ID Pagamento: #${order.payment.id})</p>
+                    <p><strong>Método:</strong> ${order.payment.method}</p>
+                    <p><strong>Horário:</strong> ${formatDate(order.payment.moment)}</p>
+                `;
+        } else {
+            paymentBox.innerHTML = `<span class="text-amber-600 font-medium">Nenhum pagamento registrado na tb_payment</span>`;
+        }
+
+        // Renderiza Itens (OrderItem)
+        const itemsTable = document.getElementById('modal-order-items-table');
+        itemsTable.innerHTML = order.items.map(item => {
+            const prod = products.find(p => p.id === item.productId);
+            const subtotal = item.price * item.quantity;
+            return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-2.5 px-4 font-medium text-slate-800">${prod ? prod.name : 'Produto #' + item.productId}</td>
+                        <td class="py-2.5 px-4 text-center text-slate-500">R$ ${item.price.toFixed(2)}</td>
+                        <td class="py-2.5 px-4 text-center font-bold text-slate-700">${item.quantity}</td>
+                        <td class="py-2.5 px-4 text-right font-semibold text-slate-900">R$ ${subtotal.toFixed(2)}</td>
+                    </tr>
+                `;
+        }).join('');
+
+        document.getElementById('modal-order-total').innerText = `R$ ${calculateOrderTotal(order).toFixed(2)}`;
+        document.getElementById('order-detail-modal').classList.remove('hidden');
+    }
+
+    function closeOrderModal() {
+        document.getElementById('order-detail-modal').classList.add('hidden');
+        currentActiveOrderModal = null;
+    }
+
+    function updateOrderStatusFromModal() {
+        if (!currentActiveOrderModal) return;
+        const newStatus = document.getElementById('modal-order-status-select').value;
+        currentActiveOrderModal.orderStatus = newStatus;
+
+        // Se for alterado para PAID e não tinha pagamento, gera automaticamente (@MapsId)
+        if (newStatus === 'PAID' && !currentActiveOrderModal.payment) {
+            currentActiveOrderModal.payment = {
+                id: currentActiveOrderModal.id, // O mesmo ID por causa do @MapsId
+                moment: new Date().toISOString(),
+                method: 'PIX / Cartão (Confirmado)'
+            };
+        }
+
+        showToast(`Status do Pedido #${currentActiveOrderModal.id} atualizado para ${newStatus}`);
+        openOrderModal(currentActiveOrderModal.id);
+        loadOrders();
+    }
+
+    // --- LÓGICA DE USUÁRIOS / CLIENTES ---
+    function loadUsers() {
+        const tbody = document.getElementById('userTableBody');
+        const cardsBody = document.getElementById('userCardsBody');
+
+        tbody.innerHTML = users.map(u => {
+            const userOrdersCount = orders.filter(o => o.client && o.client.id === u.id).length;
+            return `
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-4 px-6 font-mono text-xs text-slate-500">#${u.id}</td>
+                        <td class="py-4 px-6 font-semibold text-slate-900">${u.name}</td>
+                        <td class="py-4 px-6 text-slate-600">${u.email}</td>
+                        <td class="py-4 px-6 text-slate-500">${u.phone || '-'}</td>
+                        <td class="py-4 px-6 font-bold text-blue-600">${userOrdersCount} pedidos</td>
+                    </tr>
+                `;
+        }).join('');
+
+        cardsBody.innerHTML = users.map(u => {
+            const userOrdersCount = orders.filter(o => o.client && o.client.id === u.id).length;
+            return `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm shrink-0">
+                                ${u.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm">${u.name}</h4>
+                                <p class="text-xs text-slate-500">${u.email}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg">${userOrdersCount} pedidos</span>
+                    </div>
+                `;
+        }).join('');
+    }
+
+    // --- INICIALIZAÇÃO DA APLICAÇÃO ---
+    window.onload = function() {
+        switchTab('dashboard');
+    };
+</script>
+</body>
+</html>
