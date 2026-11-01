@@ -1,4 +1,4 @@
-package com.store.demo.controllers.exceptions;
+package com.store.demo.controllers;
 
 import com.store.demo.entities.Category;
 import com.store.demo.services.CategoryService;
