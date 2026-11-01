@@ -3,7 +3,7 @@ version: '3.8'
 services:
   store-database:
     image: postgres:16-alpine
-    container_name: ${DB_NAME}
+    container_name: store-database # Nome fixo ou use a variável ${DB_NAME}
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -27,13 +27,14 @@ services:
     ports:
       - "${APP_PORT}:${APP_PORT}"
     environment:
-      DB_HOST: database
+      # O DB_HOST precisa apontar exatamente para o nome do serviço do banco acima:
+      DB_HOST: store-database
       DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
     depends_on:
-      database:
+      store-database:
         condition: service_healthy
     networks:
       - store-net
