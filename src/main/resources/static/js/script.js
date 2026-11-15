@@ -15,7 +15,6 @@ function formatCurrency(value) {
 function formatDate(isoString) {
     if (!isoString) return '-';
 
-    // Suporte caso venha como array de data/hora do Spring (ex: [2026, 11, 15, 14, 53])
     if (Array.isArray(isoString)) {
         const [year, month, day, hour = 0, minute = 0] = isoString;
         const date = new Date(year, month - 1, day, hour, minute);
@@ -55,11 +54,16 @@ function formatPhoneDisplay(phone) {
     return phone;
 }
 
-// --- MÉTODOS AUXILIARES ---
-function calculateOrderTotal(order) {
-    if (order.total !== undefined && order.total !== null) return order.total;
-    if (!order.items || !Array.isArray(order.items)) return 0;
-    return order.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
+// --- TRADUÇÃO DE STATUS (PT-BR) ---
+function translateStatus(status) {
+    const translations = {
+        WAITING_PAYMENT: 'Aguardando Pagamento',
+        PAID: 'Pago',
+        SHIPPED: 'Enviado',
+        DELIVERED: 'Entregue',
+        CANCELED: 'Cancelado'
+    };
+    return translations[status] || status;
 }
 
 function getStatusBadge(status) {
@@ -70,7 +74,13 @@ function getStatusBadge(status) {
         DELIVERED: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">Entregue</span>',
         CANCELED: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/60">Cancelado</span>'
     };
-    return badges[status] || status;
+    return badges[status] || `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">${status}</span>`;
+}
+
+function calculateOrderTotal(order) {
+    if (order.total !== undefined && order.total !== null) return order.total;
+    if (!order.items || !Array.isArray(order.items)) return 0;
+    return order.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
 }
 
 // --- SISTEMA DE TOASTS ---
@@ -80,7 +90,7 @@ function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     const isSuccess = type === 'success';
 
-    toast.className = `toast-enter pointer-events-auto flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl border shadow-xl ${
+    toast.className = `flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl border shadow-xl ${
         isSuccess ? 'bg-slate-900 border-emerald-500/40 text-white' : 'bg-slate-900 border-rose-500/40 text-white'
     }`;
     toast.innerHTML = `
@@ -99,11 +109,7 @@ function showToast(message, type = 'success') {
         </button>
     `;
     container.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.remove('toast-enter');
-        toast.classList.add('toast-exit');
-        setTimeout(() => toast.remove(), 250);
-    }, 3500);
+    setTimeout(() => toast.remove(), 3500);
 }
 
 function toggleDrawer() {
@@ -534,7 +540,7 @@ async function deleteCategory(id, productsCount = 0) {
     }
 }
 
-// --- LÓGICA DE PEDIDOS (INTEGRADA COM ORDER DTO RECORD) ---
+// --- LÓGICA DE PEDIDOS ---
 function loadOrders() {
     const tbody = document.getElementById('orderTableBody');
     const cardsBody = document.getElementById('orderCardsBody');
@@ -683,7 +689,13 @@ function openOrderModal(orderId) {
     document.getElementById('modal-order-moment').innerText = `Data: ${formatDate(order.moment)}`;
     document.getElementById('modal-order-client').innerText = order.client ? order.client.name : 'N/A';
     document.getElementById('modal-order-email').innerText = order.client ? order.client.email : '-';
-    document.getElementById('modal-order-status-select').value = order.orderStatus;
+
+    // Popular select de status traduzido em português (mantendo enum de valor)
+    const statusSelect = document.getElementById('modal-order-status-select');
+    const statuses = ['WAITING_PAYMENT', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELED'];
+    statusSelect.innerHTML = statuses.map(s =>
+        `<option value="${s}" ${order.orderStatus === s ? 'selected' : ''}>${translateStatus(s)}</option>`
+    ).join('');
 
     const paymentBox = document.getElementById('modal-order-payment');
     if (order.payment) {
@@ -734,7 +746,7 @@ async function updateOrderStatusFromModal() {
 
         if (!response.ok) throw new Error('Erro ao atualizar status.');
 
-        showToast(`Status atualizado para ${newStatus} com sucesso!`);
+        showToast(`Status atualizado para ${translateStatus(newStatus)} com sucesso!`);
         closeOrderModal();
         await loadAllData();
         loadOrders();
