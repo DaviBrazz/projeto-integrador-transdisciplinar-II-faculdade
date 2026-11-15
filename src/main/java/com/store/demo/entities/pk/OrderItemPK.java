@@ -1,6 +1,6 @@
 package com.store.demo.entities.pk;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.store.demo.entities.Order;
 import com.store.demo.entities.Product;
 import jakarta.persistence.Embeddable;
@@ -21,12 +21,15 @@ public class OrderItemPK implements Serializable {
 	@JoinColumn(name = "product_id")
 	private Product product;
 
+	@JsonIgnore
 	public Order getOrder() {
 		return order;
 	}
 	public void setOrder(Order order) {
 		this.order = order;
 	}
+
+	@JsonIgnore
 	public Product getProduct() {
 		return product;
 	}
