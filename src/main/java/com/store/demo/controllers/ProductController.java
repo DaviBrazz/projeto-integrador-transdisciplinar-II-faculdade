@@ -1,7 +1,9 @@
 package com.store.demo.controllers;
 
+import com.store.demo.dtos.ProductDTO;
 import com.store.demo.entities.Product;
 import com.store.demo.services.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/products")
 public class ProductController {
+
     @Autowired
     private ProductService service;
 
@@ -29,22 +32,22 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Product> insert(@RequestBody Product obj) {
-        obj = service.insert(obj);
+    public ResponseEntity<Product> insert(@Valid @RequestBody ProductDTO dto) {
+        Product obj = service.insert(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(obj.getId()).toUri();
         return ResponseEntity.created(uri).body(obj);
+    }
+
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<Product> update(@PathVariable Long id, @Valid @RequestBody ProductDTO dto) {
+        Product obj = service.update(id, dto);
+        return ResponseEntity.ok().body(obj);
     }
 
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping(value = "/{id}")
-    public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody Product obj) {
-        obj = service.update(id, obj);
-        return ResponseEntity.ok().body(obj);
     }
 }
